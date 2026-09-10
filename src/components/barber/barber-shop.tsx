@@ -76,16 +76,27 @@ export function BarberShop({
         <h1 className="text-5xl uppercase tracking-[0.08em] md:text-6xl">{shopName}</h1>
         <p className="max-w-xl text-lg text-[var(--muted)]">
           Fades, rayas y diseños
-          {barberName ? ` con ${barberName}` : ""}. Elige el que te gusta y reserva. No necesitas
-          cuenta.
+          {barberName ? ` con ${barberName}` : ""}. Separa tu turno. El corte lo afinamos en la
+          silla. No necesitas cuenta.
         </p>
       </header>
+
+      <section className="space-y-4" id="reservar">
+        <h2 className="text-3xl">Reserva</h2>
+        <BookingWizard
+          key={`${picked.cut_style}-${picked.serviceId}`}
+          slug={slug}
+          timezone={timezone}
+          services={services}
+          prefill={picked}
+        />
+      </section>
 
       <section className="space-y-5">
         <div>
           <h2 className="text-3xl">¿Qué corte te gusta?</h2>
           <p className="mt-2 text-[var(--muted)]">
-            Filtra por forma de cabeza. Las rayas y el diseño se marcan en la silla.
+            Mira ideas. Si te gusta uno, tócalo y te deja el servicio listo arriba.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -182,17 +193,6 @@ export function BarberShop({
           </div>
         </section>
       ) : null}
-
-      <section className="space-y-4">
-        <h2 className="text-3xl">Reserva</h2>
-        <BookingWizard
-          key={`${picked.cut_style}-${picked.serviceId}`}
-          slug={slug}
-          timezone={timezone}
-          services={services}
-          prefill={picked}
-        />
-      </section>
     </div>
   );
 }

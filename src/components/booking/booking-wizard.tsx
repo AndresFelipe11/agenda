@@ -371,7 +371,7 @@ export function BookingWizard({
         </section>
       )}
 
-      <section className="space-y-4" id="reservar">
+      <section className="space-y-4">
         <h2 className="font-[family-name:var(--font-display)] text-2xl">3. Tus datos</h2>
         <form action={submit} className="grid gap-4">
           <div className="space-y-1">
