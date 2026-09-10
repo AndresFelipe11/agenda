@@ -1,39 +1,8 @@
+import type { Prisma } from "@prisma/client";
 import { CLASSIC_CUT_NAME, VIP_CUT_NAME } from "@/lib/barber/catalog";
 import { getTemplate } from "@/lib/templates";
 
-type SeedClient = {
-  staff: {
-    findMany: (args: { where: { tenantId: string; isActive?: boolean } }) => Promise<{ id: string }[]>;
-  };
-  service: {
-    findMany: (args: { where: { tenantId: string } }) => Promise<{ id: string; name: string }[]>;
-    update: (args: {
-      where: { id: string };
-      data: {
-        name?: string;
-        description?: string;
-        durationMin?: number;
-        priceAmount?: number | null;
-        customFields?: unknown;
-      };
-    }) => Promise<unknown>;
-    create: (args: {
-      data: {
-        tenantId: string;
-        name: string;
-        description: string;
-        durationMin: number;
-        priceAmount: number;
-        bookingMode: "appointment";
-        capacity: number;
-        customFields: unknown;
-        staff: { create: { staffId: string }[] };
-      };
-    }) => Promise<unknown>;
-  };
-};
-
-export async function seedBarberServices(tx: SeedClient, tenantId: string) {
+export async function seedBarberServices(tx: Prisma.TransactionClient, tenantId: string) {
   const template = getTemplate("barber");
   const wanted = template.services.filter((service) =>
     [CLASSIC_CUT_NAME, VIP_CUT_NAME, "Barba"].includes(service.name),

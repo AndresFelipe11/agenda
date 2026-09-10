@@ -1,44 +1,7 @@
+import type { Prisma } from "@prisma/client";
 import { DEFAULT_CUT_STYLES, SAMPLE_GALLERY } from "@/lib/barber/catalog";
 
-type SeedClient = {
-  cutStyle: {
-    findMany: (args: {
-      where: { tenantId: string };
-      select: { id: true; name: true; imagePath: true };
-    }) => Promise<{ id: string; name: string; imagePath: string | null }[]>;
-    createMany: (args: {
-      data: {
-        tenantId: string;
-        name: string;
-        description: string;
-        category: string;
-        headShapes: string[];
-        imagePath: string;
-      }[];
-    }) => Promise<unknown>;
-    deleteMany: (args: {
-      where: {
-        tenantId: string;
-        OR?: ({ imagePath: { startsWith: string } } | { imagePath: null })[];
-      };
-    }) => Promise<unknown>;
-  };
-  galleryPhoto: {
-    deleteMany: (args: {
-      where: { tenantId: string; imagePath?: { startsWith: string } };
-    }) => Promise<unknown>;
-    createMany: (args: {
-      data: {
-        tenantId: string;
-        imagePath: string;
-        caption: string;
-        styleId?: string | null;
-      }[];
-    }) => Promise<unknown>;
-  };
-};
-
-export async function seedCutStyles(tx: SeedClient, tenantId: string) {
+export async function seedCutStyles(tx: Prisma.TransactionClient, tenantId: string) {
   await tx.galleryPhoto.deleteMany({
     where: { tenantId, imagePath: { startsWith: "/samples/" } },
   });
