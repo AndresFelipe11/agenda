@@ -1,4 +1,5 @@
 import { requireTenant } from "@/lib/tenant";
+import { getTenantWhatsApp } from "@/lib/tenant-whatsapp";
 import { updateTenantSettings } from "@/lib/actions/settings";
 import { TIMEZONES } from "@/lib/templates";
 import { CopyLinkButton } from "@/components/dashboard/copy-link-button";
@@ -9,6 +10,7 @@ import { Select } from "@/components/ui/select";
 
 export default async function SettingsPage() {
   const { tenant } = await requireTenant();
+  const whatsapp = await getTenantWhatsApp(tenant.id);
   return (
     <div className="max-w-xl space-y-6">
       <div>
@@ -33,6 +35,17 @@ export default async function SettingsPage() {
               </option>
             ))}
           </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>WhatsApp del barbero</Label>
+          <Input
+            name="whatsapp"
+            defaultValue={whatsapp ?? ""}
+            placeholder="3001234567"
+          />
+          <p className="text-xs text-[var(--muted)]">
+            Cuando alguien reserve, se abre WhatsApp con el mensaje de la cita.
+          </p>
         </div>
         <Button type="submit">Guardar</Button>
       </form>

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { MonthCalendar } from "@/components/ui/month-calendar";
 import { formatPrice } from "@/lib/utils";
-import type { Slot } from "@/lib/booking/slots";
+import type { PublicDaySlot, Slot } from "@/lib/booking/slots";
 
 export type PublicService = {
   id: string;
@@ -49,20 +49,20 @@ export function BookingWizard({
   slug: string;
   timezone: string;
   services: PublicService[];
-  prefill?: { cut_style?: string; head_shape?: string; serviceId?: string };
+  prefill?: { cut_style?: string; serviceId?: string };
 }) {
   const router = useRouter();
   const [serviceId, setServiceId] = useState(prefill?.serviceId || services[0]?.id || "");
   const [staffId, setStaffId] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<Slot | null>(null);
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<PublicDaySlot[]>([]);
+  const [period, setPeriod] = useState<"morning" | "afternoon">("morning");
   const [sessionId, setSessionId] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const [customData, setCustomData] = useState<Record<string, string>>({
     ...(prefill?.cut_style ? { cut_style: prefill.cut_style } : {}),
-    ...(prefill?.head_shape ? { head_shape: prefill.head_shape } : {}),
   });
 
   const service = services.find((item) => item.id === serviceId);
@@ -74,7 +74,14 @@ export function BookingWizard({
   const fields = (Array.isArray(service?.customFields) ? service?.customFields : []) as CustomField[];
   const extraFields = fields.filter((field) => {
     const label = `${field.id} ${field.label}`.toLowerCase();
-    return !label.includes("correo") && !label.includes("email");
+    return (
+      field.id !== "cut_style" &&
+      field.id !== "head_shape" &&
+      !label.includes("correo") &&
+      !label.includes("email") &&
+      !label.includes("corte que") &&
+      !label.includes("forma")
+    );
   });
   const isSession = service?.bookingMode === "session";
   const enabledWeekdays = useMemo(() => {
@@ -88,6 +95,7 @@ export function BookingWizard({
     setDate("");
     setSlot(null);
     setSlots([]);
+    setPeriod("morning");
     setSessionId("");
     setCustomData({});
     setError("");
@@ -119,13 +127,7 @@ export function BookingWizard({
         clientName: String(formData.get("clientName") ?? ""),
         clientPhone: String(formData.get("clientPhone") ?? ""),
         customData: {
-          ...customData,
-          ...(prefill?.cut_style && !customData.cut_style
-            ? { cut_style: prefill.cut_style }
-            : {}),
-          ...(prefill?.head_shape && !customData.head_shape
-            ? { head_shape: prefill.head_shape }
-            : {}),
+          cut_style: customData.cut_style || prefill?.cut_style || "",
         },
       });
       if (!result.ok) {
@@ -242,6 +244,9 @@ export function BookingWizard({
             enabledWeekdays={enabledWeekdays}
             onChange={(next) => {
               setDate(next);
+              const now = DateTime.now().setZone(timezone);
+              const picked = DateTime.fromISO(next, { zone: timezone });
+              setPeriod(picked.hasSame(now, "day") && now.hour >= 12 ? "afternoon" : "morning");
               const currentStaff = selectedStaffId || staffOptions[0]?.id;
               if (currentStaff) {
                 if (staffOptions.length > 1) setStaffId(currentStaff);
@@ -249,36 +254,125 @@ export function BookingWizard({
               }
             }}
           />
-          <div className="flex flex-wrap gap-2">
-            {date && slots.length === 0 && !pending ? (
-              <p className="text-sm text-[var(--muted)]">No hay huecos este día.</p>
-            ) : null}
-            {slots.map((item) => (
-              <button
-                key={item.startsAt}
-                type="button"
-                onClick={() => setSlot(item)}
-                className={`rounded-full border px-3 py-2 text-sm ${
-                  slot?.startsAt === item.startsAt
-                    ? "border-[var(--accent)] bg-[var(--accent)] text-white"
-                    : "border-[var(--line)] bg-[var(--card)]"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          {date ? (
+            <div className="space-y-3 rounded-3xl border border-[var(--line)] bg-[var(--card)] p-4">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--accent)]">Horario</p>
+                  <p className="font-[family-name:var(--font-display)] text-xl capitalize">
+                    {DateTime.fromISO(date, { zone: timezone }).setLocale("es").toFormat("cccc d 'de' LLLL")}
+                  </p>
+                </div>
+                <p className="text-sm text-[var(--muted)]">
+                  {slots.filter((item) => item.status === "available").length} libres ·{" "}
+                  {slots.filter((item) => item.status === "occupied").length} ocupadas
+                </p>
+              </div>
+              {(() => {
+                const hourOf = (item: PublicDaySlot) =>
+                  DateTime.fromISO(item.startsAt, { zone: "utc" }).setZone(timezone).hour;
+                const morning = slots.filter((item) => hourOf(item) < 12);
+                const afternoon = slots.filter((item) => hourOf(item) >= 12);
+                const visible = period === "morning" ? morning : afternoon;
+                const freeIn = (list: PublicDaySlot[]) =>
+                  list.filter((item) => item.status === "available").length;
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPeriod("morning")}
+                        className={`rounded-2xl border px-4 py-3 text-left ${
+                          period === "morning"
+                            ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                            : "border-[var(--line)] bg-[var(--background)]"
+                        }`}
+                      >
+                        <span className="block font-[family-name:var(--font-display)] text-lg">Mañana</span>
+                        <span className={`text-xs ${period === "morning" ? "text-white/80" : "text-[var(--muted)]"}`}>
+                          {freeIn(morning)} libres
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPeriod("afternoon")}
+                        className={`rounded-2xl border px-4 py-3 text-left ${
+                          period === "afternoon"
+                            ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                            : "border-[var(--line)] bg-[var(--background)]"
+                        }`}
+                      >
+                        <span className="block font-[family-name:var(--font-display)] text-lg">Tarde</span>
+                        <span className={`text-xs ${period === "afternoon" ? "text-white/80" : "text-[var(--muted)]"}`}>
+                          {freeIn(afternoon)} libres
+                        </span>
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-[var(--muted)]">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Libre
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)]" /> Ocupado
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[var(--silver)]" /> Ya pasó
+                      </span>
+                    </div>
+                    {pending ? (
+                      <p className="text-sm text-[var(--muted)]">Cargando horas...</p>
+                    ) : visible.length === 0 ? (
+                      <p className="text-sm text-[var(--muted)]">
+                        No hay horas en la {period === "morning" ? "mañana" : "tarde"}.
+                      </p>
+                    ) : (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {visible.map((item) => {
+                          const selected = slot?.startsAt === item.startsAt;
+                          const free = item.status === "available";
+                          return (
+                            <button
+                              key={item.startsAt}
+                              type="button"
+                              disabled={!free}
+                              onClick={() => setSlot(item)}
+                              className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm ${
+                                selected
+                                  ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                                  : free
+                                    ? "border-emerald-500/40 bg-emerald-500/10 hover:border-emerald-400"
+                                    : item.status === "occupied"
+                                      ? "cursor-not-allowed border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--muted)]"
+                                      : "cursor-not-allowed border-[var(--line)] bg-white/5 text-[var(--silver)]"
+                              }`}
+                            >
+                              <span className="font-medium">{item.label}</span>
+                              <span className="text-xs uppercase tracking-wide">
+                                {selected
+                                  ? "Elegida"
+                                  : item.status === "available"
+                                    ? "Libre"
+                                    : item.status === "occupied"
+                                      ? "Ocupado"
+                                      : "Ya pasó"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">Marca un día en el calendario para ver las horas.</p>
+          )}
         </section>
       )}
 
       <section className="space-y-4" id="reservar">
         <h2 className="font-[family-name:var(--font-display)] text-2xl">3. Tus datos</h2>
-        {prefill?.cut_style ? (
-          <p className="rounded-2xl border border-[var(--blue)]/40 bg-[var(--blue)]/10 px-4 py-3 text-sm">
-            Pedido: <strong>{prefill.cut_style}</strong>
-            {prefill.head_shape ? ` · forma ${prefill.head_shape}` : ""}
-          </p>
-        ) : null}
         <form action={submit} className="grid gap-4">
           <div className="space-y-1">
             <Label htmlFor="clientName">Nombre</Label>

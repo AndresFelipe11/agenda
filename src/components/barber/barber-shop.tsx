@@ -40,7 +40,6 @@ export function BarberShop({
   const [shape, setShape] = useState<string>("");
   const [picked, setPicked] = useState<{
     cut_style?: string;
-    head_shape?: string;
     serviceId?: string;
   }>({});
 
@@ -57,7 +56,6 @@ export function BarberShop({
     const service = services.find((item) => item.name === serviceName);
     setPicked({
       cut_style: style.name,
-      head_shape: shape ? headShapeLabel(shape) : undefined,
       serviceId: service?.id,
     });
     document.getElementById("reservar")?.scrollIntoView({ behavior: "smooth" });
@@ -178,7 +176,7 @@ export function BarberShop({
       <section className="space-y-4">
         <h2 className="text-3xl">Reserva</h2>
         <BookingWizard
-          key={`${picked.cut_style}-${picked.head_shape}-${picked.serviceId}`}
+          key={`${picked.cut_style}-${picked.serviceId}`}
           slug={slug}
           timezone={timezone}
           services={services}

@@ -3,13 +3,15 @@
 import { BookingMode, BookingStatus } from "@prisma/client";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-import { generateSlotsForDay } from "@/lib/booking/slots";
+import { generatePublicDaySlots } from "@/lib/booking/slots";
 import {
   BookingError,
   createAppointmentBooking,
   createSessionBooking,
 } from "@/lib/booking/create";
 import { sendBookingConfirmation } from "@/lib/email";
+import { bookingWhatsAppText, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { getTenantWhatsApp } from "@/lib/tenant-whatsapp";
 
 export async function getPublicTenant(slug: string) {
   return prisma.tenant.findUnique({
@@ -79,7 +81,7 @@ export async function getAvailableSlots(input: {
     },
   });
 
-  return generateSlotsForDay({
+  return generatePublicDaySlots({
     date: input.date,
     timezone: tenant.timezone,
     durationMin: service.durationMin,
@@ -135,7 +137,25 @@ export async function createPublicBooking(input: {
           });
 
     await sendBookingConfirmation(booking);
-    return { ok: true as const, bookingId: booking.id };
+    const custom = booking.customData as Record<string, string>;
+    const whatsapp = await getTenantWhatsApp(booking.tenant.id);
+    const whatsappUrl = whatsapp
+      ? buildWhatsAppUrl(
+          whatsapp,
+          bookingWhatsAppText({
+            tenantName: booking.tenant.name,
+            timezone: booking.tenant.timezone,
+            clientName: booking.clientName,
+            clientPhone: booking.clientPhone,
+            serviceName: booking.service.name,
+            priceAmount: booking.service.priceAmount,
+            startsAt: booking.startsAt,
+            staffName: booking.staff?.name,
+            cutStyle: custom.cut_style,
+          }),
+        )
+      : "";
+    return { ok: true as const, bookingId: booking.id, whatsappUrl };
   } catch (error) {
     const message =
       error instanceof BookingError ? error.message : "No se pudo crear la reserva.";

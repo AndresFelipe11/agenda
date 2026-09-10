@@ -57,21 +57,7 @@ export const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
         priceAmount: 20000,
         bookingMode: "appointment",
         capacity: 1,
-        customFields: [
-          {
-            id: "cut_style",
-            label: "Corte que quieres",
-            type: "text",
-            required: false,
-          },
-          {
-            id: "head_shape",
-            label: "Forma de tu cabeza",
-            type: "select",
-            required: false,
-            options: ["Ovalada", "Redonda", "Cuadrada", "Alargada", "Corazón", "Diamante"],
-          },
-        ],
+        customFields: [],
       },
       {
         name: "Corte VIP",
@@ -80,21 +66,7 @@ export const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
         priceAmount: 35000,
         bookingMode: "appointment",
         capacity: 1,
-        customFields: [
-          {
-            id: "cut_style",
-            label: "Corte que quieres",
-            type: "text",
-            required: false,
-          },
-          {
-            id: "head_shape",
-            label: "Forma de tu cabeza",
-            type: "select",
-            required: false,
-            options: ["Ovalada", "Redonda", "Cuadrada", "Alargada", "Corazón", "Diamante"],
-          },
-        ],
+        customFields: [],
       },
       {
         name: "Barba",

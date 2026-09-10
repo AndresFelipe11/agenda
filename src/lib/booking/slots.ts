@@ -77,6 +77,55 @@ export function slotExists(slots: Slot[], startsAtIso: string) {
   return slots.some((slot) => slot.startsAt === startsAtIso);
 }
 
+export type PublicDaySlot = Slot & {
+  status: "available" | "occupied" | "past";
+};
+
+export function generatePublicDaySlots(input: {
+  date: string;
+  timezone: string;
+  durationMin: number;
+  weeklyHours: Pick<WeeklyAvailability, "weekday" | "startMin" | "endMin">[];
+  bookings: Pick<Booking, "startsAt" | "endsAt" | "status">[];
+  now?: DateTime;
+}): PublicDaySlot[] {
+  const { date, timezone, durationMin, weeklyHours, bookings } = input;
+  const day = DateTime.fromISO(date, { zone: timezone }).startOf("day");
+  if (!day.isValid) return [];
+
+  const now = input.now ?? DateTime.now().setZone(timezone);
+  const hours = weeklyHours.filter((block) => block.weekday === day.weekday);
+  const busy = bookings.filter((booking) =>
+    ACTIVE_STATUSES.includes(booking.status as (typeof ACTIVE_STATUSES)[number]),
+  );
+
+  const slots: PublicDaySlot[] = [];
+
+  for (const block of hours) {
+    let cursor = day.plus({ minutes: block.startMin });
+    const blockEnd = day.plus({ minutes: block.endMin });
+
+    while (cursor.plus({ minutes: durationMin }) <= blockEnd) {
+      const slotEnd = cursor.plus({ minutes: durationMin });
+      const startsAt = cursor.toUTC().toJSDate();
+      const endsAt = slotEnd.toUTC().toJSDate();
+      const occupied = busy.some((booking) =>
+        overlaps(startsAt, endsAt, booking.startsAt, booking.endsAt),
+      );
+      const past = cursor <= now;
+      slots.push({
+        startsAt: cursor.toUTC().toISO()!,
+        endsAt: slotEnd.toUTC().toISO()!,
+        label: cursor.toFormat("HH:mm"),
+        status: occupied ? "occupied" : past ? "past" : "available",
+      });
+      cursor = cursor.plus({ minutes: durationMin });
+    }
+  }
+
+  return slots;
+}
+
 export type GridSlot<T> = Slot & {
   booking: T | null;
 };

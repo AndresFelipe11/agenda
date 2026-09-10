@@ -2,6 +2,9 @@ import { DateTime } from "luxon";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { WhatsAppNotify } from "@/components/booking/whatsapp-notify";
+import { bookingWhatsAppText, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { getTenantWhatsApp } from "@/lib/tenant-whatsapp";
 
 export default async function BookingDonePage({
   params,
@@ -26,6 +29,23 @@ export default async function BookingDonePage({
     .toFormat("cccc d 'de' LLLL, HH:mm");
 
   const custom = booking.customData as Record<string, string>;
+  const whatsapp = await getTenantWhatsApp(booking.tenant.id);
+  const whatsappUrl = whatsapp
+    ? buildWhatsAppUrl(
+        whatsapp,
+        bookingWhatsAppText({
+          tenantName: booking.tenant.name,
+          timezone: booking.tenant.timezone,
+          clientName: booking.clientName,
+          clientPhone: booking.clientPhone,
+          serviceName: booking.service.name,
+          priceAmount: booking.service.priceAmount,
+          startsAt: booking.startsAt,
+          staffName: booking.staff?.name,
+          cutStyle: custom.cut_style,
+        }),
+      )
+    : "";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-16">
@@ -38,13 +58,11 @@ export default async function BookingDonePage({
         {booking.clientName}, tu {booking.service.name} quedó para <strong className="text-[var(--foreground)]">{when}</strong>
         {booking.staff ? ` con ${booking.staff.name}` : ""}.
       </p>
-      {custom.cut_style ? (
-        <p className="mt-2 text-sm text-[var(--blue)]">Estilo pedido: {custom.cut_style}</p>
-      ) : null}
       <p className="mt-3 text-sm text-[var(--muted)]">
-        Anota el horario. El barbero ya tiene tu reserva.
+        Anota el horario. Si WhatsApp no se abrió, toca el botón para avisarle al barbero.
       </p>
-      <Link href={`/${slug}`} className="mt-8 text-[var(--blue)] underline">
+      {whatsappUrl ? <WhatsAppNotify url={whatsappUrl} /> : null}
+      <Link href={`/${slug}`} className="mt-8 block text-[var(--blue)] underline">
         Reservar otra vez
       </Link>
     </main>
