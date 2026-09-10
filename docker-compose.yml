@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agendas
+      POSTGRES_PASSWORD: agendas
+      POSTGRES_DB: agendas
+    ports:
+      - "5432:5432"
+    volumes:
+      - agendas_pg:/var/lib/postgresql/data
+
+volumes:
+  agendas_pg:

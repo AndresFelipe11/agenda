@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingMode {
+  appointment
+  session
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+}
+
+enum MembershipRole {
+  owner
+  staff
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+}
+
+model Tenant {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  timezone    String         @default("America/Bogota")
+  template    String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  memberships Membership[]
+  staff       Staff[]
+  services    Service[]
+  sessions    ClassSession[]
+  bookings    Booking[]
+  cutStyles   CutStyle[]
+  gallery     GalleryPhoto[]
+}
+
+model Membership {
+  id       String         @id @default(cuid())
+  role     MembershipRole @default(owner)
+  userId   String
+  tenantId String
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+}
+
+model Staff {
+  id          String               @id @default(cuid())
+  tenantId    String
+  name        String
+  email       String?
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  weeklyHours WeeklyAvailability[]
+  services    ServiceStaff[]
+  bookings    Booking[]
+  sessions    ClassSession[]
+}
+
+model WeeklyAvailability {
+  id       String @id @default(cuid())
+  staffId  String
+  weekday  Int
+  startMin Int
+  endMin   Int
+  staff    Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, weekday, startMin, endMin])
+}
+
+model Service {
+  id           String         @id @default(cuid())
+  tenantId     String
+  name         String
+  description  String?
+  durationMin  Int
+  priceAmount  Int?
+  bookingMode  BookingMode    @default(appointment)
+  capacity     Int            @default(1)
+  customFields Json           @default("[]")
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  staff        ServiceStaff[]
+  sessions     ClassSession[]
+  bookings     Booking[]
+}
+
+model ServiceStaff {
+  serviceId String
+  staffId   String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, staffId])
+}
+
+model ClassSession {
+  id        String    @id @default(cuid())
+  tenantId  String
+  serviceId String
+  staffId   String?
+  startsAt  DateTime @db.Timestamptz
+  endsAt    DateTime @db.Timestamptz
+  capacity  Int
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  service   Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staff     Staff?    @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  bookings  Booking[]
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  tenantId    String
+  serviceId   String
+  staffId     String?
+  sessionId   String?
+  startsAt    DateTime      @db.Timestamptz
+  endsAt      DateTime      @db.Timestamptz
+  status      BookingStatus @default(confirmed)
+  clientName  String
+  clientEmail String?
+  clientPhone String?
+  customData  Json          @default("{}")
+  createdAt   DateTime      @default(now())
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  service     Service       @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  staff       Staff?        @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  session     ClassSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, startsAt])
+  @@index([staffId, startsAt])
+  @@index([sessionId])
+}
+
+model CutStyle {
+  id          String         @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  category    String         @default("corte")
+  headShapes  String[]
+  imagePath   String?
+  serviceId   String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  photos      GalleryPhoto[]
+}
+
+model GalleryPhoto {
+  id        String    @id @default(cuid())
+  tenantId  String
+  imagePath String
+  caption   String?
+  styleId   String?
+  createdAt DateTime  @default(now())
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  style     CutStyle? @relation(fields: [styleId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+}
