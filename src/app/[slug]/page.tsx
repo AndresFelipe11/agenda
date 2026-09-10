@@ -13,7 +13,7 @@ export async function generateMetadata({
   if (!tenant) return { title: "Página no encontrada" };
   return {
     title: tenant.name,
-    description: `Reserva tu corte en ${tenant.name}.`,
+    description: `Reserva tu corte en ${tenant.name}. Elige el que te gusta.`,
   };
 }
 

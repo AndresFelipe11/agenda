@@ -21,8 +21,8 @@ export async function getDefaultPublicTenantSlug() {
   return tenant;
 }
 
-export async function hasAnyTenant() {
-  return (await prisma.tenant.count()) > 0;
+export async function hasOwnerAccount() {
+  return (await prisma.membership.count({ where: { role: "owner" } })) > 0;
 }
 
 export async function getPublicTenant(slug: string) {

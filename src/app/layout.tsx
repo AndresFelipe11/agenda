@@ -16,7 +16,7 @@ const display = Cinzel({
 
 export const metadata: Metadata = {
   title: {
-    default: "Barbería",
+    default: "Barberstudio Goodvibes",
     template: "%s",
   },
   description: "Reserva tu corte. Estilos según la forma de tu cabeza.",

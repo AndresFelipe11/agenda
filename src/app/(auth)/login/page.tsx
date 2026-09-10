@@ -1,8 +1,8 @@
 import { LoginForm } from "@/components/auth/login-form";
-import { hasAnyTenant } from "@/lib/actions/public";
+import { hasOwnerAccount } from "@/lib/actions/public";
 
 export default async function LoginPage() {
-  const showRegister = !(await hasAnyTenant());
+  const showRegister = !(await hasOwnerAccount());
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <div className="barber-stripe mb-8 rounded-full" />

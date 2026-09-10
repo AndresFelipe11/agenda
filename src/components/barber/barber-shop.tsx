@@ -25,6 +25,7 @@ export type PublicGalleryPhoto = {
 
 export function BarberShop({
   shopName,
+  barberName,
   slug,
   timezone,
   services,
@@ -32,6 +33,7 @@ export function BarberShop({
   gallery,
 }: {
   shopName: string;
+  barberName?: string;
   slug: string;
   timezone: string;
   services: PublicService[];
@@ -73,13 +75,15 @@ export function BarberShop({
         </div>
         <h1 className="text-5xl uppercase tracking-[0.08em] md:text-6xl">{shopName}</h1>
         <p className="max-w-xl text-lg text-[var(--muted)]">
-          Fades, rayas y diseños. Elige el que te late y reserva. No necesitas cuenta.
+          Fades, rayas y diseños
+          {barberName ? ` con ${barberName}` : ""}. Elige el que te gusta y reserva. No necesitas
+          cuenta.
         </p>
       </header>
 
       <section className="space-y-5">
         <div>
-          <h2 className="text-3xl">¿Qué corte te late?</h2>
+          <h2 className="text-3xl">¿Qué corte te gusta?</h2>
           <p className="mt-2 text-[var(--muted)]">
             Filtra por forma de cabeza. Las rayas y el diseño se marcan en la silla.
           </p>

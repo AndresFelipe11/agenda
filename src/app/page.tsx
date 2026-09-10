@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!tenant) return { title: "Reserva tu corte" };
   return {
     title: tenant.name,
-    description: `Reserva tu corte en ${tenant.name}. No necesitas cuenta.`,
+    description: `Reserva tu corte en ${tenant.name}. Elige el que te gusta. No necesitas cuenta.`,
   };
 }
 

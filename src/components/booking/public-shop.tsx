@@ -58,6 +58,7 @@ export async function PublicShop({ slug }: { slug: string }) {
         {tenant.template === "barber" ? (
           <BarberShop
             shopName={tenant.name}
+            barberName={tenant.staff[0]?.name}
             slug={tenant.slug}
             timezone={tenant.timezone}
             services={services}

@@ -70,14 +70,48 @@ export async function registerAction(
     return { error: "Ya existe una cuenta con ese correo." };
   }
 
+  const orphanTenant = await prisma.tenant.findFirst({
+    where: { memberships: { none: {} } },
+    include: { staff: true },
+  });
+
   const existingTenant = await prisma.tenant.findUnique({ where: { slug } });
-  if (existingTenant) {
+  if (existingTenant && existingTenant.id !== orphanTenant?.id) {
     return { error: "Ese enlace ya está en uso. Elige otro slug." };
   }
 
   const template = getTemplate(templateId);
   const passwordHash = await hash(password, 10);
 
+  if (orphanTenant) {
+    await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { name, email, passwordHash },
+      });
+      await tx.membership.create({
+        data: {
+          userId: user.id,
+          tenantId: orphanTenant.id,
+          role: "owner",
+        },
+      });
+      await tx.tenant.update({
+        where: { id: orphanTenant.id },
+        data: {
+          name: "Barberstudio Goodvibes",
+          slug: "barberstudio-goodvibes",
+          timezone,
+        },
+      });
+      const staff = orphanTenant.staff[0];
+      if (staff) {
+        await tx.staff.update({
+          where: { id: staff.id },
+          data: { name: "Jhonatnan Tamayo", email },
+        });
+      }
+    });
+  } else {
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: { name, email, passwordHash },
@@ -154,6 +188,7 @@ export async function registerAction(
       }
     }
   });
+  }
 
   try {
     await signIn("credentials", {
