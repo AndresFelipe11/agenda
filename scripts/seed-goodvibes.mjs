@@ -12,13 +12,13 @@ const prisma = new PrismaClient();
 
 const tenant = await prisma.tenant.upsert({
   where: { slug: "barberstudio-goodvibes" },
-  update: { name: "Barberstudio Goodvibes", whatsapp: "3215688265" },
+  update: { name: "Barberstudio Goodvibes", whatsapp: "3005623453" },
   create: {
     name: "Barberstudio Goodvibes",
     slug: "barberstudio-goodvibes",
     timezone: "America/Bogota",
     template: "barber",
-    whatsapp: "3215688265",
+    whatsapp: "3005623453",
   },
 });
 
