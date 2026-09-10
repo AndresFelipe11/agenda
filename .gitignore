@@ -46,3 +46,4 @@ next-env.d.ts
 
 # embedded postgres
 /data
+.neon
