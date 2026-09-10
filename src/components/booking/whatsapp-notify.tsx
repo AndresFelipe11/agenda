@@ -5,7 +5,10 @@ import { useEffect } from "react";
 export function WhatsAppNotify({ url }: { url: string }) {
   useEffect(() => {
     if (!url) return;
-    window.location.assign(url);
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      window.location.assign(url);
+    }
   }, [url]);
 
   return (

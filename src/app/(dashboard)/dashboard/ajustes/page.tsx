@@ -44,7 +44,7 @@ export default async function SettingsPage() {
             placeholder="3001234567"
           />
           <p className="text-xs text-[var(--muted)]">
-            Cuando alguien reserve, se abre WhatsApp con el mensaje de la cita.
+            Celular de 10 dígitos. El cliente abre WhatsApp y debe tocar Enviar para que te llegue.
           </p>
         </div>
         <Button type="submit">Guardar</Button>

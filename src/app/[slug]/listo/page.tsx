@@ -59,9 +59,14 @@ export default async function BookingDonePage({
         {booking.staff ? ` con ${booking.staff.name}` : ""}.
       </p>
       <p className="mt-3 text-sm text-[var(--muted)]">
-        Anota el horario. Si WhatsApp no se abrió, toca el botón para avisarle al barbero.
+        Anota el horario. Toca el botón verde y en WhatsApp dale a <strong>Enviar</strong> para que
+        el barbero reciba el mensaje.
       </p>
-      {whatsappUrl ? <WhatsAppNotify url={whatsappUrl} /> : null}
+      {whatsappUrl ? <WhatsAppNotify url={whatsappUrl} /> : (
+        <p className="mt-4 text-sm text-[var(--accent)]">
+          El barbero aún no tiene WhatsApp configurado.
+        </p>
+      )}
       <Link href={`/${slug}`} className="mt-8 block text-[var(--blue)] underline">
         Reservar otra vez
       </Link>
