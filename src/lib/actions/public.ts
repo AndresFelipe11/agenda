@@ -13,6 +13,18 @@ import { sendBookingConfirmation } from "@/lib/email";
 import { bookingWhatsAppText, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getTenantWhatsApp } from "@/lib/tenant-whatsapp";
 
+export async function getDefaultPublicTenantSlug() {
+  const tenant = await prisma.tenant.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { slug: true, name: true },
+  });
+  return tenant;
+}
+
+export async function hasAnyTenant() {
+  return (await prisma.tenant.count()) > 0;
+}
+
 export async function getPublicTenant(slug: string) {
   return prisma.tenant.findUnique({
     where: { slug },

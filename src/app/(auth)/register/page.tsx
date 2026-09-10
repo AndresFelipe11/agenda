@@ -7,8 +7,7 @@ export default function RegisterPage() {
       <p className="text-[11px] uppercase tracking-[0.35em] text-[var(--accent)]">Tu barbería</p>
       <h1 className="mt-4 text-4xl">Abre tu espacio</h1>
       <p className="mt-2 text-[var(--muted)]">
-        Tus clientes reservan en <span className="text-[var(--blue)]">/tu-barberia</span>. Nadie más
-        aparece en esa página.
+        Tú administras la agenda. Tus clientes reservan en la página principal sin crear cuenta.
       </p>
       <div className="mt-8">
         <RegisterForm />

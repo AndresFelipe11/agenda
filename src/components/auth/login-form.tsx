@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 
 const initial: ActionState = {};
 
-export function LoginForm() {
+export function LoginForm({ showRegister = true }: { showRegister?: boolean }) {
   const [state, action, pending] = useActionState(loginAction, initial);
 
   return (
@@ -32,12 +32,21 @@ export function LoginForm() {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Entrando..." : "Entrar"}
       </Button>
-      <p className="text-center text-sm text-[var(--muted)]">
-        ¿Aún no tienes espacio?{" "}
-        <Link href="/register" className="font-medium text-[var(--blue)] underline">
-          Crear cuenta
-        </Link>
-      </p>
+      {showRegister ? (
+        <p className="text-center text-sm text-[var(--muted)]">
+          ¿Aún no tienes espacio?{" "}
+          <Link href="/register" className="font-medium text-[var(--blue)] underline">
+            Crear cuenta
+          </Link>
+        </p>
+      ) : (
+        <p className="text-center text-sm text-[var(--muted)]">
+          Los clientes reservan sin entrar.{" "}
+          <Link href="/" className="font-medium text-[var(--blue)] underline">
+            Ir a la agenda
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

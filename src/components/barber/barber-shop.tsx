@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { BookingWizard, type PublicService } from "@/components/booking/booking-wizard";
 import { CUT_PRICES, HEAD_SHAPES, headShapeLabel, styleServiceName, styleTier } from "@/lib/barber/catalog";
 import { Badge } from "@/components/ui/badge";
@@ -64,10 +65,15 @@ export function BarberShop({
   return (
     <div className="space-y-16">
       <header className="space-y-4">
-        <p className="text-[11px] uppercase tracking-[0.35em] text-[var(--accent)]">Barbería</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.35em] text-[var(--accent)]">Barbería</p>
+          <Link href="/login" className="text-sm text-[var(--muted)] underline">
+            Soy el barbero
+          </Link>
+        </div>
         <h1 className="text-5xl uppercase tracking-[0.08em] md:text-6xl">{shopName}</h1>
         <p className="max-w-xl text-lg text-[var(--muted)]">
-          Fades, rayas y diseños. Elige el que te late y reserva.
+          Fades, rayas y diseños. Elige el que te late y reserva. No necesitas cuenta.
         </p>
       </header>
 
